@@ -1,42 +1,44 @@
-from sqlalchemy import Column, String
+from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
-from sqlalchemy import text
-from models.pedido import Pedido
 
 def run_manual_migrations(db: Session) -> None:
     engine = db.get_bind()
-    with engine.connect() as connection:
-        # 1. Adicionar comprovante_pix
-        try:
-            connection.execute(text("ALTER TABLE pedidos ADD COLUMN comprovante_pix VARCHAR"))
-            connection.commit()
+    inspector = inspect(engine)
+    
+    # 1. Tabela 'pedidos': column 'comprovante_pix'
+    try:
+        columns = [c['name'] for c in inspector.get_columns('pedidos')]
+        if 'comprovante_pix' not in columns:
+            with engine.connect() as conn:
+                conn.execute(text("ALTER TABLE pedidos ADD COLUMN comprovante_pix VARCHAR"))
+                conn.commit()
             print("✅ Coluna 'comprovante_pix' adicionada com sucesso.")
-        except Exception as e:
-            if "duplicate column" in str(e) or "already exists" in str(e):
-                print("ℹ️ Coluna 'comprovante_pix' já existe.")
-            else:
-                print(f"❌ Erro ao adicionar coluna comprovante_pix: {e}")
-
-        # 2. Adicionar cliente_id
-        try:
-            connection.execute(text("ALTER TABLE pedidos ADD COLUMN cliente_id INTEGER"))
-            connection.execute(text("ALTER TABLE pedidos ADD CONSTRAINT fk_pedidos_clientes FOREIGN KEY (cliente_id) REFERENCES clientes(id)"))
-            connection.commit()
+        else:
+            print("ℹ️ Coluna 'comprovante_pix' já existe.")
+            
+        # 2. Tabela 'pedidos': column 'cliente_id'
+        if 'cliente_id' not in columns:
+            with engine.connect() as conn:
+                conn.execute(text("ALTER TABLE pedidos ADD COLUMN cliente_id INTEGER"))
+                conn.execute(text("ALTER TABLE pedidos ADD CONSTRAINT fk_pedidos_clientes FOREIGN KEY (cliente_id) REFERENCES clientes(id)"))
+                conn.commit()
             print("✅ Coluna 'cliente_id' adicionada com sucesso.")
-        except Exception as e:
-            if "duplicate column" in str(e) or "already exists" in str(e):
-                print("ℹ️ Coluna 'cliente_id' já existe.")
-            else:
-                print(f"❌ Erro ao adicionar coluna cliente_id: {e}")
+        else:
+            print("ℹ️ Coluna 'cliente_id' já existe.")
 
-        # 3. Adicionar whatsapp_instance_token em supermarkets
-        try:
-            connection.execute(text("ALTER TABLE supermarkets ADD COLUMN whatsapp_instance_token VARCHAR"))
-            connection.commit()
+    except Exception as e:
+        print(f"❌ Erro ao verificar/migrar tabela pedidos: {e}")
+
+    # 3. Tabela 'supermarkets': column 'whatsapp_instance_token'
+    try:
+        columns = [c['name'] for c in inspector.get_columns('supermarkets')]
+        if 'whatsapp_instance_token' not in columns:
+            with engine.connect() as conn:
+                conn.execute(text("ALTER TABLE supermarkets ADD COLUMN whatsapp_instance_token VARCHAR"))
+                conn.commit()
             print("✅ Coluna 'whatsapp_instance_token' adicionada em supermarkets.")
-        except Exception as e:
-            if "duplicate column" in str(e) or "already exists" in str(e):
-                print("ℹ️ Coluna 'whatsapp_instance_token' já existe em supermarkets.")
-            else:
-                print(f"❌ Erro ao adicionar coluna whatsapp_instance_token: {e}")
+        else:
+            print("ℹ️ Coluna 'whatsapp_instance_token' já existe.")
+    except Exception as e:
+        print(f"❌ Erro ao verificar/migrar tabela supermarkets: {e}")
 
