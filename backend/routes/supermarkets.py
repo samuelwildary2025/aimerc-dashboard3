@@ -176,8 +176,23 @@ def list_supermarkets(
         query = query.filter(Supermarket.ativo == ativo)
     
     # Paginação
-    supermarkets = query.offset(skip).limit(limit).all()
-    return supermarkets
+    try:
+        supermarkets = query.offset(skip).limit(limit).all()
+        return supermarkets
+    except Exception as e:
+        # Auto-healing: se for erro de coluna ausente, tenta rodar migration
+        if "no such column" in str(e) or "column" in str(e) and "does not exist" in str(e):
+            print("⚠️ Erro de schema detectado. Tentando auto-reparo...")
+            try:
+                from manual_migration_pix import run_manual_migrations
+                run_manual_migrations(db)
+                # Retry query
+                supermarkets = query.offset(skip).limit(limit).all()
+                return supermarkets
+            except Exception as migration_error:
+                print(f"❌ Falha no auto-reparo: {migration_error}")
+                raise HTTPException(status_code=500, detail=f"Erro de Schema: {str(e)}")
+        raise e
 
 @router.get("/{supermarket_id}", response_model=SupermarketResponse)
 def get_supermarket(
