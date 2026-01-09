@@ -1,0 +1,51 @@
+# ===================================
+# DOCKER COMPOSE - CONTAINER UNIFICADO
+# Frontend + Backend em um único serviço
+# ===================================
+
+version: '3.8'
+
+services:
+  # ===================================
+  # Aplicação Unificada
+  # ===================================
+  wildhub-unified:
+    build:
+      context: .
+      dockerfile: Dockerfile.unified
+    container_name: wildhub-unified
+    ports:
+      - "80:80"
+    environment:
+      # Variáveis de ambiente para o backend
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      # Adicione aqui suas variáveis de ambiente específicas
+      # - DATABASE_URL=your_database_url
+      # - SECRET_KEY=your_secret_key
+    volumes:
+      # Volume para logs (opcional)
+      - ./logs:/var/log/app
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - wildhub-network
+
+# ===================================
+# Redes
+# ===================================
+networks:
+  wildhub-network:
+    driver: bridge
+
+# ===================================
+# Volumes
+# ===================================
+volumes:
+  logs:
+    driver: local

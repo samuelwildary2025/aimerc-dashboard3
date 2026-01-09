@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ================================
+   🎨 Estilo Global — Wildhub System
+================================= */
+html, body, #root {
+  /* MODIFICADO: Remove classes de fundo/texto globalmente. O AdminLayout agora gerencia o fundo/texto principal para evitar conflitos de tema. */
+  @apply min-h-screen transition-colors duration-300;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ================================
+   🧩 Componentes Base
+================================= */
+.card {
+  /* MODIFICADO: Define explicitamente cores para Light Mode (padrão) e Dark Mode */
+  @apply bg-white text-gray-900 border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-300;
+  @apply dark:bg-dark-800 dark:text-gray-100 dark:border-dark-700;
+}
+
+.input {
+  /* MELHORADO: Garante que o texto do input seja escuro no modo claro */
+  @apply bg-gray-100 dark:bg-dark-700 text-gray-800 dark:text-gray-100 
+         border border-gray-300 dark:border-dark-600 
+         rounded-md py-2 px-3 
+         focus:outline-none focus:ring-2 focus:ring-blue-500 
+         transition-all duration-300;
+}
+
+.button {
+  @apply inline-flex items-center justify-center gap-2 
+         px-4 py-2 rounded-md font-medium
+         bg-blue-600 hover:bg-blue-700 text-white 
+         dark:bg-blue-500 dark:hover:bg-blue-600
+         transition-all duration-300;
+}
+
+.button-outline {
+  @apply inline-flex items-center justify-center gap-2 
+         px-4 py-2 rounded-md font-medium
+         border border-blue-500 text-blue-600 dark:text-blue-400
+         hover:bg-blue-50 dark:hover:bg-blue-900/30
+         transition-all duration-300;
+}
+
+/* ================================
+   🧭 Sidebar e Navegação
+================================= */
+aside {
+  @apply transition-colors duration-300;
+}
+
+aside a {
+  @apply transition-all duration-200;
+}
+
+aside a.active {
+  @apply bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300;
+}
+
+/* ================================
+   🪶 Header
+================================= */
+header {
+  @apply transition-colors duration-300 shadow-sm;
+}
+
+/* ================================
+   📦 Cards e Containers
+================================= */
+.section {
+  @apply rounded-xl bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 p-4;
+}
+
+.section-title {
+  @apply text-lg font-semibold mb-3 text-gray-800 dark:text-gray-200;
+}
+
+/* ================================
+   💰 Tipografia
+================================= */
+h1, h2, h3, h4, h5 {
+  @apply font-semibold text-gray-900 dark:text-white;
+}
+
+p {
+  @apply text-gray-600 dark:text-gray-300;
+}
+
+/* ================================
+   ❌ REMOVIDO BLOCO DE CORREÇÃO DE CONTRASTE COM !IMPORTANT
+   (Essa correção estava causando o problema de cores mistas)
+================================= */
+
+/* ================================
+   📱 Responsividade
+================================= */
+@media (max-width: 1024px) {
+  .card {
+    @apply rounded-lg;
+  }
+  .button {
+    @apply text-sm px-3 py-1.5;
+  }
+}
+
+/* ================================
+   🛎️ Destaque para pedidos alterados
+================================= */
+@keyframes shake-alert {
+  0% { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+  100% { transform: translateX(-2px); }
+}
+
+.shake-alert {
+  animation: shake-alert 0.45s ease-in-out infinite;
+}

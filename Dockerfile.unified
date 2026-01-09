@@ -1,0 +1,47 @@
+# ===================================
+# DOCKERFILE UNIFICADO - WildHub Sistema
+# Frontend (Vite + React) + Backend (FastAPI) + Nginx
+# ===================================
+
+# ---------- STAGE 1: Build do Frontend ----------
+FROM node:18-alpine AS frontend-builder
+
+WORKDIR /app/frontend
+
+# Copiar dependências e instalar
+COPY frontend/package*.json ./
+RUN npm ci
+
+# Copiar código do frontend e gerar build
+COPY frontend/ ./
+RUN npm run build
+
+
+# ---------- STAGE 2: Imagem Final ----------
+FROM python:3.11-alpine AS production
+
+# Instalar pacotes necessários
+RUN apk add --no-cache bash nginx supervisor curl && mkdir -p /var/log/supervisor /run/nginx /app/backend
+
+# ---------- Backend (FastAPI) ----------
+WORKDIR /app
+COPY backend/requirements.txt ./backend/
+RUN pip install --no-cache-dir -r backend/requirements.txt
+COPY backend/ ./backend/
+# ---------------- COPY backend/.env ./backend/.env -------------------
+
+# ---------- Frontend (Nginx) ----------
+COPY --from=frontend-builder /app/frontend/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# ---------- Supervisor ----------
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# ---------- Configurações finais ----------
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+
+EXPOSE 80
+
+# Comando principal
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
