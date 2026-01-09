@@ -677,3 +677,15 @@ def update_custom_token(
     db.refresh(supermarket)
     
     return {"message": "Token atualizado com sucesso", "custom_token": new_token}
+
+@router.get("/fix-db")
+def fix_database(db: Session = Depends(get_db)):
+    """Rota de emergência para corrigir o banco de dados"""
+    try:
+        from manual_migration_pix import run_manual_migrations
+        run_manual_migrations(db)
+        return {"message": "Migrações executadas com sucesso! Verifique os logs."}
+    except Exception as e:
+        import traceback
+        error_msg = traceback.format_exc()
+        return {"message": "Erro ao executar migrações", "error": str(e), "traceback": error_msg}
