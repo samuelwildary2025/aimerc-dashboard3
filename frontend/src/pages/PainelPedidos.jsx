@@ -836,7 +836,19 @@ Obrigado pela preferência!
                       </div>
                       <div className="flex items-start gap-2 text-gray-700 dark:text-dark-200">
                         <CreditCard size={16} className="mt-0.5 text-gray-500 dark:text-dark-400" />
-                        <span>{selectedPedido?.forma || selectedPedido?.payment_method || '—'}</span>
+                        <div className="flex flex-col">
+                          <span>{selectedPedido?.forma || selectedPedido?.payment_method || '—'}</span>
+                          {selectedPedido?.comprovante_pix && (
+                            <a
+                              href={selectedPedido.comprovante_pix}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-600 dark:text-blue-400 hover:underline mt-1 flex items-center gap-1"
+                            >
+                              <span>📎 Ver Comprovante</span>
+                            </a>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
