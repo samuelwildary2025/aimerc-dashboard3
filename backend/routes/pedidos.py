@@ -361,7 +361,8 @@ def update_pedido(
     tenant_id: Optional[int] = Depends(get_current_tenant)
 ):
     _ensure_numero_pedido_column(db)
-    query = db.query(Pedido).filter(Pedido.id == pedido_id)
+    # Eager load supermarket para garantir acesso ao token no envio de msg
+    query = db.query(Pedido).options(selectinload(Pedido.supermarket)).filter(Pedido.id == pedido_id)
     if tenant_id is not None:
         query = query.filter(Pedido.tenant_id == tenant_id)
     pedido = query.first()
