@@ -41,6 +41,7 @@ class Supermarket(Base):
     plano = Column(String, default="basico")
     ativo = Column(Boolean, default=True)
     custom_token = Column(String, nullable=True)  # Token manual para API
+    whatsapp_instance_token = Column(String, nullable=True)  # Token da instância do WhatsApp
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

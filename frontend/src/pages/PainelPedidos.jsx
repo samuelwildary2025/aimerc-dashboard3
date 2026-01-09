@@ -264,41 +264,7 @@ const PainelPedidos = () => {
     })
   }
 
-  // Envia notificação WhatsApp para o cliente
-  const sendWhatsAppNotification = async (telefone, mensagem) => {
-    if (!telefone) {
-      console.warn('Telefone não informado, notificação não enviada')
-      return
-    }
 
-    // Normaliza telefone (remove caracteres especiais, mantém apenas dígitos)
-    const numeroNormalizado = telefone.replace(/\D/g, '')
-    // Adiciona código do país se necessário
-    const numeroFinal = numeroNormalizado.startsWith('55') ? numeroNormalizado : `55${numeroNormalizado}`
-
-    try {
-      const response = await fetch('https://wildhub.uazapi.com/send/text', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'token': 'c253a5fe-131b-4ab1-bd2a-62f812bc8856'
-        },
-        body: JSON.stringify({
-          number: numeroFinal,
-          text: mensagem
-        })
-      })
-
-      if (response.ok) {
-        console.log('✅ Notificação WhatsApp enviada para:', numeroFinal)
-      } else {
-        console.error('❌ Erro ao enviar WhatsApp:', response.status)
-      }
-    } catch (error) {
-      console.error('❌ Erro ao enviar notificação WhatsApp:', error)
-    }
-  }
 
   const handleStatusChange = async (pedidoId, newStatus) => {
     const current = pedidos.find(p => p.id === pedidoId)
@@ -343,15 +309,9 @@ const PainelPedidos = () => {
       stickyAlteredIdsRef.current = sticky
       saveStickyToStorage(smId, sticky)
 
-      // Envia notificação WhatsApp para o cliente
-      const telefoneCliente = current?.telefone ?? current?.phone
-      if (telefoneCliente) {
-        if (newStatus === 'separado') {
-          sendWhatsAppNotification(telefoneCliente, '📦 Olá! Seu pedido está sendo separado e logo estará pronto para entrega!')
-        } else if (newStatus === 'entregue') {
-          sendWhatsAppNotification(telefoneCliente, '🚚 Boa notícia! Seu pedido saiu para entrega! Aguarde nosso entregador.')
-        }
-      }
+      // Envia notificação WhatsApp para o cliente (AGORA FEITO PELO BACKEND)
+      // O backend verifica se o supermercado tem token e envia a mensagem automaticamente
+      // ao detectar mudança de status para 'separado' ou 'entregue'
 
       // Fecha o modal se estiver aberto e for o mesmo pedido
       if (selectedPedido && selectedPedido.id === pedidoId) {

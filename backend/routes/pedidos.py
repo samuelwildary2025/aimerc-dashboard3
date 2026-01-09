@@ -381,8 +381,31 @@ def update_pedido(
         # Aplicar alterações e efetivar
         for field, value in update_data.items():
             setattr(pedido, field, value)
+        
         db.commit()
         db.refresh(pedido)
+        
+        # 🔔 Enviar notificação WhatsApp se status mudou para 'separado' ou 'entregue'
+        # e o supermercado tiver token configurado
+        if "status" in update_data and update_data["status"] in ["separado", "entregue"]:
+            try:
+                from utils.whatsapp import send_whatsapp_message
+                
+                # Obter token do supermercado
+                supermarket_token = pedido.supermarket.whatsapp_instance_token if pedido.supermarket else None
+                
+                if supermarket_token and pedido.telefone:
+                    msg = ""
+                    if update_data["status"] == "separado":
+                        msg = f"📦 Olá {pedido.nome_cliente}! Seu pedido #{pedido.numero_pedido} está sendo separado e logo estará pronto para entrega!"
+                    elif update_data["status"] == "entregue":
+                        msg = f"🚚 Boa notícia {pedido.nome_cliente}! Seu pedido #{pedido.numero_pedido} saiu para entrega! Aguarde nosso entregador."
+                    
+                    if msg:
+                        print(f"📨 Tentando enviar WhatsApp para {pedido.telefone} (Token: {supermarket_token[:5]}...)")
+                        send_whatsapp_message(pedido.telefone, msg, supermarket_token)
+            except Exception as e:
+                print(f"❌ Erro ao tentar enviar notificação WhatsApp: {e}")
 
         refreshed = db.query(Pedido).filter(Pedido.id == pedido_id).first()
         if not refreshed:

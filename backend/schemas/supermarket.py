@@ -34,6 +34,7 @@ class SupermarketCreate(BaseModel):
     plano: Optional[str] = Field("basico", description="Plano do supermercado")
     ativo: Optional[bool] = Field(True, description="Status ativo do supermercado")
     custom_token: Optional[str] = Field(None, description="Token manual para API")
+    whatsapp_instance_token: Optional[str] = Field(None, description="Token da instância do WhatsApp")
     
     @validator('cnpj')
     def validate_cnpj(cls, v):
@@ -110,6 +111,7 @@ class SupermarketUpdate(BaseModel):
     plano: Optional[str] = None
     ativo: Optional[bool] = None
     custom_token: Optional[str] = Field(None, description="Token manual para API")
+    whatsapp_instance_token: Optional[str] = Field(None, description="Token da instância do WhatsApp")
     
     @validator('cnpj')
     def validate_cnpj(cls, v):
@@ -180,6 +182,7 @@ class SupermarketResponse(BaseModel):
     plano: str
     ativo: bool
     custom_token: Optional[str]
+    whatsapp_instance_token: Optional[str]
     created_at: datetime
     updated_at: datetime
     

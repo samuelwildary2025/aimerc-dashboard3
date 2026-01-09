@@ -29,3 +29,14 @@ def run_manual_migrations(db: Session) -> None:
             else:
                 print(f"❌ Erro ao adicionar coluna cliente_id: {e}")
 
+        # 3. Adicionar whatsapp_instance_token em supermarkets
+        try:
+            connection.execute(text("ALTER TABLE supermarkets ADD COLUMN whatsapp_instance_token VARCHAR"))
+            connection.commit()
+            print("✅ Coluna 'whatsapp_instance_token' adicionada em supermarkets.")
+        except Exception as e:
+            if "duplicate column" in str(e) or "already exists" in str(e):
+                print("ℹ️ Coluna 'whatsapp_instance_token' já existe em supermarkets.")
+            else:
+                print(f"❌ Erro ao adicionar coluna whatsapp_instance_token: {e}")
+
