@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { getPedidos, updatePedido } from '../services/api'
+import { getPedidos, updatePedido, getSupermarket } from '../services/api'
+import axios from 'axios'
 import Header from '../components/Header'
 import PedidoCard from '../components/PedidoCard'
 import {
@@ -37,6 +38,7 @@ const PainelPedidos = () => {
   // Rastreia IDs que mudaram nesta atualização para autoabrir modal uma vez
   const recentlyChangedIdsRef = useRef(new Set())
   const autoOpenDoneRef = useRef(new Set())
+  const [whatsappToken, setWhatsappToken] = useState(null)
 
   // Obtém supermarketId do usuário logado (se houver)
   const getSupermarketId = () => {
@@ -77,7 +79,23 @@ const PainelPedidos = () => {
 
   useEffect(() => {
     loadPedidos()
+    loadSupermarketData()
   }, [])
+
+  const loadSupermarketData = async () => {
+    try {
+      const smId = getSupermarketId()
+      if (smId) {
+        const response = await getSupermarket(smId)
+        if (response.data && response.data.whatsapp_instance_token) {
+          setWhatsappToken(response.data.whatsapp_instance_token)
+          console.log('✅ Token WhatsApp carregado:', response.data.whatsapp_instance_token)
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados do supermercado:', error)
+    }
+  }
 
   // Atualização automática (polling) para refletir novos pedidos sem recarregar
   const refreshPedidos = async () => {
@@ -309,9 +327,10 @@ const PainelPedidos = () => {
       stickyAlteredIdsRef.current = sticky
       saveStickyToStorage(smId, sticky)
 
-      // Envia notificação WhatsApp para o cliente (AGORA FEITO PELO BACKEND)
-      // O backend verifica se o supermercado tem token e envia a mensagem automaticamente
-      // ao detectar mudança de status para 'separado' ou 'entregue'
+      // Envia notificação WhatsApp para o cliente (Frontend Direct Call)
+      if (['separado', 'entregue'].includes(newStatus) && whatsappToken && current?.telefone) {
+        sendDirectWhatsApp(current, newStatus, whatsappToken)
+      }
 
       // Fecha o modal se estiver aberto e for o mesmo pedido
       if (selectedPedido && selectedPedido.id === pedidoId) {
@@ -322,6 +341,48 @@ const PainelPedidos = () => {
       setPedidos(pedidos.map(p =>
         p.id === pedidoId ? { ...p, status: newStatus, foi_alterado: false } : p
       ))
+    }
+  }
+
+  const sendDirectWhatsApp = async (pedido, status, token) => {
+    const telefone = pedido.telefone
+    if (!telefone) return
+
+    let msg = ''
+    const numeroPedido = pedido.numero_pedido || pedido.id
+    if (status === 'separado') {
+      msg = `📦 Olá ${pedido.cliente_nome || pedido.nome_cliente || 'Cliente'}! Seu pedido #${numeroPedido} está sendo separado e logo estará pronto para entrega!`
+    } else if (status === 'entregue') {
+      msg = `🚚 Boa notícia ${pedido.cliente_nome || pedido.nome_cliente || 'Cliente'}! Seu pedido #${numeroPedido} saiu para entrega! Aguarde nosso entregador.`
+    }
+
+    if (!msg) return
+
+    console.log('🚀 Tentando enviar mensagem via Frontend:', { telefone, token, msg })
+
+    // Normalização básica do telefone (apenas números)
+    const phoneDigits = telefone.replace(/\D/g, '')
+
+    try {
+      const response = await axios.post(
+        'https://sistema-whatsapp-api.5mos1l.easypanel.host/message/text',
+        {
+          to: phoneDigits,
+          text: msg
+        },
+        {
+          headers: {
+            'X-Instance-Token': token,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+
+      console.log('✅ WhatsApp enviado com sucesso!', response.data)
+      alert("Notificação WhatsApp enviada!")
+    } catch (error) {
+      console.error('❌ Erro ao enviar WhatsApp:', error)
+      alert("Erro ao enviar notificação WhatsApp (ver console)")
     }
   }
 
