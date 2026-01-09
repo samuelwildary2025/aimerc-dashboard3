@@ -12,6 +12,7 @@ from routes import auth_router, auth_alias_router, supermarkets_router, pedidos_
 from routes.financeiro import router as financeiro_router
 from routes.clientes import router as clientes_router
 from auth.jwt_handler import get_password_hash
+from manual_migration_pix import run_manual_migrations
 
 
 # ==========================================
@@ -21,10 +22,10 @@ try:
     print("🏗️  Criando tabelas no banco de dados...")
     UserModel.metadata.create_all(bind=engine)
     Supermarket.metadata.create_all(bind=engine)
+    Cliente.metadata.create_all(bind=engine)  # Cliente deve vir antes de Pedido
     Pedido.metadata.create_all(bind=engine)
     ItemPedido.metadata.create_all(bind=engine)
     SupermarketHistory.metadata.create_all(bind=engine)
-    Cliente.metadata.create_all(bind=engine)
     print("✅ Tabelas criadas com sucesso!")
 except Exception as e:
     print(f"❌ ERRO ao criar tabelas: {e}")
@@ -115,6 +116,14 @@ async def startup_event():
 
     try:
         db = next(get_db())
+        
+        # 🔨 Executar migrações manuais de colunas
+        print("🔄 Verificando migrações de esquema...")
+        try:
+            run_manual_migrations(db)
+        except Exception as e:
+            print(f"⚠️ Erro ao executar migrações: {e}")
+
         admin_user = db.query(UserModel).filter(UserModel.email == admin_email).first()
 
         if not admin_user:
