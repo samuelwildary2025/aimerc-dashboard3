@@ -876,7 +876,7 @@ const Supermarkets = () => {
       {/* Modal de cadastro/edição */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-dark-800 rounded-lg w-full max-w-3xl">
+          <div className="bg-dark-800 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-white">
@@ -938,7 +938,7 @@ const Supermarkets = () => {
                 </div>
 
                 {/* Endereço */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="label">CEP</label>
                     <input
