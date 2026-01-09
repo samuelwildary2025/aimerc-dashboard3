@@ -352,10 +352,13 @@ def get_pedido(
     
     return pedido
 
+from fastapi import Response
+
 @router.put("/{pedido_id}", response_model=PedidoResponse)
 def update_pedido(
     pedido_id: int,
     pedido_update: PedidoUpdate,
+    response: Response,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     tenant_id: Optional[int] = Depends(get_current_tenant)
@@ -414,8 +417,11 @@ def update_pedido(
                     if msg:
                         print(f"📨 Tentando enviar WhatsApp para {pedido.telefone} (Token: {supermarket_token[:5]}...)")
                         send_whatsapp_message(pedido.telefone, msg, supermarket_token)
+                        response.headers["X-Whatsapp-Log"] = f"Success sent to {pedido.telefone}"
                 else:
+                    reason = "No Token" if not supermarket_token else "No Phone"
                     print(f"⚠️ Pulei envio: Token={bool(supermarket_token)}, Tel={bool(pedido.telefone)}")
+                    response.headers["X-Whatsapp-Log"] = f"Skipped: {reason}"
 
             except Exception as e:
                 print(f"❌ Erro ao tentar enviar notificação WhatsApp: {e}")

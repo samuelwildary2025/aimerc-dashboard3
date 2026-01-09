@@ -26,7 +26,7 @@ api.interceptors.request.use(
   (config) => {
     console.log('🚀 Fazendo requisição para:', (config.baseURL || '') + (config.url || ''))
     console.log('🔧 Config completa:', config)
-    
+
     const token =
       (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('token')) ||
       (typeof localStorage !== 'undefined' && localStorage.getItem('token'))
@@ -43,7 +43,14 @@ api.interceptors.request.use(
 
 // Intercepta erros de autenticação (401) e de rede
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Debug remoto do WhatsApp vindo do backend
+    const whatsappLog = response.headers['x-whatsapp-log'] || response.headers['X-Whatsapp-Log']
+    if (whatsappLog) {
+      console.log('%c📱 WhatsApp Log:', 'background: #25D366; color: white; padding: 2px 5px; border-radius: 3px;', whatsappLog)
+    }
+    return response
+  },
   (error) => {
     if (error.code === 'ERR_NETWORK') {
       console.error('❌ Falha de rede ao conectar com:', API_BASE_URL)
@@ -54,7 +61,7 @@ api.interceptors.response.use(
       try {
         sessionStorage.removeItem('token')
         sessionStorage.removeItem('user')
-      } catch {}
+      } catch { }
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       window.location.href = '/login'
@@ -128,7 +135,7 @@ export const createPedido = (pedido) => api.post('/pedidos/', pedido)
 
 export const createPedidoWithCustomToken = (pedido, customToken) => {
   console.log('🔧 createPedidoWithCustomToken usando API_BASE_URL:', API_BASE_URL)
-  
+
   const customAxios = axios.create({
     baseURL: API_BASE_URL,
     headers: {
@@ -136,7 +143,7 @@ export const createPedidoWithCustomToken = (pedido, customToken) => {
       Authorization: `Bearer ${customToken}`,
     },
   })
-  
+
   // Adiciona interceptor de resposta para tratar erros de rede
   customAxios.interceptors.response.use(
     (response) => response,
@@ -148,9 +155,9 @@ export const createPedidoWithCustomToken = (pedido, customToken) => {
       return Promise.reject(error)
     }
   )
-  
+
   console.log('🚀 customAxios baseURL:', customAxios.defaults.baseURL)
-  
+
   return customAxios.post('/pedidos/', pedido)
 }
 
