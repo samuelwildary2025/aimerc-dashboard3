@@ -43,6 +43,7 @@ class PedidoCreate(BaseModel):
     itens: List[ItemPedidoCreate]
     # Novos campos aceitos no payload
     forma: Optional[str] = None
+    endereco: Optional[str] = None  # Campo restaurado para permitir salvar o endereço
     observacao: Optional[str] = None
     telefone: Optional[str] = None
     comprovante_pix: Optional[str] = None
