@@ -200,7 +200,6 @@ def get_my_supermarket(
     current_user: User = Depends(get_current_user)
 ):
     """Permite que um usuário de supermercado obtenha sua própria configuração."""
-    from auth.middleware import get_current_user
     
     if current_user.role == "admin":
         raise HTTPException(
