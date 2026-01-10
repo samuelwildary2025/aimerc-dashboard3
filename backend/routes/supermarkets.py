@@ -18,7 +18,7 @@ from schemas.supermarket import (
     SupermarketDeleteRequest,
     AgentTestRequest,
 )
-from auth.middleware import require_admin
+from auth.middleware import require_admin, get_current_user
 from auth.jwt_handler import get_password_hash, verify_password, create_access_token
 from utils.crud_logger import log_event
 from datetime import datetime, timedelta
@@ -193,6 +193,32 @@ def list_supermarkets(
                 print(f"❌ Falha no auto-reparo: {migration_error}")
                 raise HTTPException(status_code=500, detail=f"Erro de Schema: {str(e)}")
         raise e
+
+@router.get("/me", response_model=SupermarketResponse)
+def get_my_supermarket(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Permite que um usuário de supermercado obtenha sua própria configuração."""
+    if current_user.role == "admin":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Administradores não têm supermercado associado. Use /supermarkets/{id}."
+        )
+    
+    if not current_user.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Usuário não possui supermercado vinculado"
+        )
+    
+    supermarket = db.query(Supermarket).filter(Supermarket.id == current_user.tenant_id).first()
+    if not supermarket:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Supermercado não encontrado"
+        )
+    return supermarket
 
 @router.get("/{supermarket_id}", response_model=SupermarketResponse)
 def get_supermarket(
