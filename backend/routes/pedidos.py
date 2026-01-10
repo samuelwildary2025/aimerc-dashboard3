@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import func, inspect, text
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -352,19 +352,16 @@ def get_pedido(
     
     return pedido
 
-
 @router.put("/{pedido_id}", response_model=PedidoResponse)
 def update_pedido(
     pedido_id: int,
     pedido_update: PedidoUpdate,
-    response: Response,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     tenant_id: Optional[int] = Depends(get_current_tenant)
 ):
     _ensure_numero_pedido_column(db)
-    # Eager load supermarket para garantir acesso ao token no envio de msg
-    query = db.query(Pedido).options(selectinload(Pedido.supermarket)).filter(Pedido.id == pedido_id)
+    query = db.query(Pedido).filter(Pedido.id == pedido_id)
     if tenant_id is not None:
         query = query.filter(Pedido.tenant_id == tenant_id)
     pedido = query.first()
@@ -391,22 +388,13 @@ def update_pedido(
         # 🔔 Enviar notificação WhatsApp se status mudou para 'separado' ou 'entregue'
         # e o supermercado tiver token configurado
         if "status" in update_data and update_data["status"] in ["separado", "entregue"]:
-            print(f"🔄 Check Notificação: Status mudou para {update_data['status']}")
             try:
                 from utils.whatsapp import send_whatsapp_message
                 
                 # Obter token do supermercado
-                supermarket = pedido.supermarket
-                supermarket_token = supermarket.whatsapp_instance_token if supermarket else None
-                
-                print(f"🔎 Debug Info: Pedido={pedido.id}, SupermercadoID={pedido.tenant_id}")
-                print(f"   Supermercado Loaded? {supermarket is not None}")
-                if supermarket:
-                    print(f"   Token presente? {bool(supermarket_token)}")
-                    print(f"   Token value (mask): {supermarket_token[:5]}..." if supermarket_token else "None")
+                supermarket_token = pedido.supermarket.whatsapp_instance_token if pedido.supermarket else None
                 
                 if supermarket_token and pedido.telefone:
-                    print("🚀 Iniciando envio...")
                     msg = ""
                     if update_data["status"] == "separado":
                         msg = f"📦 Olá {pedido.nome_cliente}! Seu pedido #{pedido.numero_pedido} está sendo separado e logo estará pronto para entrega!"
@@ -416,16 +404,8 @@ def update_pedido(
                     if msg:
                         print(f"📨 Tentando enviar WhatsApp para {pedido.telefone} (Token: {supermarket_token[:5]}...)")
                         send_whatsapp_message(pedido.telefone, msg, supermarket_token)
-                        response.headers["X-Whatsapp-Log"] = f"Success sent to {pedido.telefone}"
-                else:
-                    reason = "No Token" if not supermarket_token else "No Phone"
-                    print(f"⚠️ Pulei envio: Token={bool(supermarket_token)}, Tel={bool(pedido.telefone)}")
-                    response.headers["X-Whatsapp-Log"] = f"Skipped: {reason}"
-
             except Exception as e:
                 print(f"❌ Erro ao tentar enviar notificação WhatsApp: {e}")
-                import traceback
-                traceback.print_exc()
 
         refreshed = db.query(Pedido).filter(Pedido.id == pedido_id).first()
         if not refreshed:
