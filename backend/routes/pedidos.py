@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import func, inspect, text
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -352,7 +352,6 @@ def get_pedido(
     
     return pedido
 
-from fastapi import Response
 
 @router.put("/{pedido_id}", response_model=PedidoResponse)
 def update_pedido(
