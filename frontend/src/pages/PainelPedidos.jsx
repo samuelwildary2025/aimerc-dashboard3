@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { getPedidos, updatePedido, getSupermarket } from '../services/api'
+import { getPedidos, updatePedido, getMySupermarket } from '../services/api'
 import axios from 'axios'
 import Header from '../components/Header'
 import PedidoCard from '../components/PedidoCard'
@@ -84,13 +84,12 @@ const PainelPedidos = () => {
 
   const loadSupermarketData = async () => {
     try {
-      const smId = getSupermarketId()
-      if (smId) {
-        const response = await getSupermarket(smId)
-        if (response.data && response.data.whatsapp_instance_token) {
-          setWhatsappToken(response.data.whatsapp_instance_token)
-          console.log('✅ Token WhatsApp carregado:', response.data.whatsapp_instance_token)
-        }
+      const response = await getMySupermarket()
+      if (response.data && response.data.whatsapp_instance_token) {
+        setWhatsappToken(response.data.whatsapp_instance_token)
+        console.log('✅ Token WhatsApp carregado:', response.data.whatsapp_instance_token)
+      } else {
+        console.log('⚠️ Token WhatsApp não configurado para este supermercado')
       }
     } catch (error) {
       console.error('Erro ao carregar dados do supermercado:', error)

@@ -89,6 +89,7 @@ export const getSupermarkets = (tenantId = null) => {
   return api.get('/supermarkets/', { params })
 }
 
+export const getMySupermarket = () => api.get('/supermarkets/me')
 export const getSupermarket = (id) => api.get(`/supermarkets/${id}`)
 export const getSupermarketIntegrationToken = (id) => api.get(`/supermarkets/${id}/integration-token`)
 export const resetSupermarketPassword = (id) => api.post(`/supermarkets/${id}/reset-password`)
