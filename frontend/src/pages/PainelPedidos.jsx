@@ -361,7 +361,11 @@ const PainelPedidos = () => {
     console.log('🚀 Tentando enviar mensagem via Frontend:', { telefone, token, msg })
 
     // Normalização básica do telefone (apenas números)
-    const phoneDigits = telefone.replace(/\D/g, '')
+    let phoneDigits = telefone.replace(/\D/g, '')
+    // Se não tiver 55 e tiver 10 ou 11 dígitos, adiciona
+    if (phoneDigits.length >= 10 && phoneDigits.length <= 11) {
+      phoneDigits = '55' + phoneDigits
+    }
 
     try {
       const response = await axios.post(
