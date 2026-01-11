@@ -217,7 +217,11 @@ def create_pedido(
         if getattr(pedido, "telefone", None) is not None:
             create_kwargs["telefone"] = pedido.telefone
         if getattr(pedido, "comprovante_pix", None) is not None:
-            create_kwargs["comprovante_pix"] = pedido.comprovante_pix
+            # Processa base64 se necessário
+            from utils.file_storage import process_comprovante_pix
+            processed = process_comprovante_pix(pedido.comprovante_pix)
+            if processed:
+                create_kwargs["comprovante_pix"] = processed
         if getattr(pedido, "created_at", None) is not None:
             # Mapeia created_at -> data_pedido respeitando GMT-3
             if pedido.created_at.tzinfo is None:

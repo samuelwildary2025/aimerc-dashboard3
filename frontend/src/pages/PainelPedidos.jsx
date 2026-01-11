@@ -862,16 +862,51 @@ Obrigado pela preferência!
                         <CreditCard size={16} className="mt-0.5 text-gray-500 dark:text-dark-400" />
                         <div className="flex flex-col">
                           <span>{selectedPedido?.forma || selectedPedido?.payment_method || '—'}</span>
-                          {selectedPedido?.comprovante_pix && (
-                            <a
-                              href={selectedPedido.comprovante_pix}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-blue-600 dark:text-blue-400 hover:underline mt-1 flex items-center gap-1"
-                            >
-                              <span>📎 Ver Comprovante</span>
-                            </a>
-                          )}
+                          {selectedPedido?.comprovante_pix && (() => {
+                            const url = selectedPedido.comprovante_pix
+                            const isPdf = url.toLowerCase().endsWith('.pdf')
+                            const isImage = /\.(png|jpg|jpeg|gif|webp)$/i.test(url)
+
+                            if (isPdf) {
+                              return (
+                                <a
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline mt-2 flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded"
+                                >
+                                  <span>📄 Ver Comprovante PDF</span>
+                                </a>
+                              )
+                            }
+
+                            if (isImage || url.startsWith('/uploads/')) {
+                              return (
+                                <div className="mt-2">
+                                  <span className="text-xs text-gray-500 dark:text-dark-400 mb-1 block">📎 Comprovante:</span>
+                                  <a href={url} target="_blank" rel="noopener noreferrer">
+                                    <img
+                                      src={url}
+                                      alt="Comprovante PIX"
+                                      className="max-w-[200px] max-h-[150px] rounded border border-gray-300 dark:border-dark-600 hover:opacity-80 transition cursor-pointer"
+                                    />
+                                  </a>
+                                </div>
+                              )
+                            }
+
+                            // Fallback para URLs externas ou desconhecidas
+                            return (
+                              <a
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-blue-600 dark:text-blue-400 hover:underline mt-1 flex items-center gap-1"
+                              >
+                                <span>📎 Ver Comprovante</span>
+                              </a>
+                            )
+                          })()}
                         </div>
                       </div>
                     </div>
